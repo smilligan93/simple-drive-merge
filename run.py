@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import os
-from os.path import join, abspath, islink
+from os.path import join, abspath, islink, isdir, isfile
 import sys
 import getopt
 
@@ -11,49 +11,29 @@ def symlink(src, dest, dir_only, file_only):
     symlinks. If the item src exists as dest, it
     will drop into the directories and recursively
     call again.
-
-    :src: TODO
-    :dest: TODO
-    :returns: TODO
-
     """
-    for s_path, s_dirs, s_files in os.walk(src):
-        for d_path, d_dirs, d_files in os.walk(dest):
-            if not file_only:
-                for s_dir in s_dirs:
-                    if islink(join(d_path,s_dir)):
-                        break
-                    if s_dir in d_dirs:
-                        symlink(join(s_path,s_dir),
-                                join(d_path,s_dir),
-                                dir_only,
-                                file_only)
-                    else:
-                        abs_src_path  = abspath(join(s_path,s_dir))
-                        abs_dest_path = abspath(join(d_path,s_dir))
-                        if islink(abs_dest_path):
-                            break
-                        print("would symlink "
-                                + str(abs_src_path)
-                                + " to "
-                                + str(abs_dest_path))
-                        os.symlink(abs_src_path, abs_dest_path)
-                        #return True
-            break
-            if not dir_only:
-                for s_file in s_files:
-                    if islink(join(s_path,s_file)):
-                        pass
-                    elif s_file in d_files:
-                        pass
-                    else:
-                        abs_src_path  = abspath(join(s_path,s_file))
-                        abs_dest_path = abspath(join(d_path,s_file))
-                        print("would symlink "
-                                + str(abs_src_path)
-                                + " to "
-                                + str(abs_dest_path))
-                        #os.symlink(abs_src_path, abs_dest_path)
+    if islink(dest):
+        print(dest + " is symlink, returning...")
+        return
+    for t in os.listdir(src):
+        if isdir(join(src, t)) and not file_only:
+            d_src  = abspath(join(src, t))
+            d_dest = abspath(join(dest, t))
+            if isdir(d_dest):
+                print(d_dest + " already exists, going in...")
+                symlink(d_src, d_dest, dir_only, file_only)
+            else:
+                print(d_dest + " does not exist, making symlink")
+                os.symlink(d_src, d_dest)
+        if isfile(join(src, t)) and not dir_only:
+            f_src  = abspath(join(src, t))
+            f_dest = abspath(join(dest, t))
+            if isfile(f_dest):
+                print(f_dest + " already exists, skipping...")
+                pass
+            else:
+                print(f_dest + " does not exist, making symlink")
+                os.symlink(f_src, f_dest)
 
 
 if __name__ == "__main__":
