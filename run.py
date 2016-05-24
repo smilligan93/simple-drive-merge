@@ -6,13 +6,13 @@ from os.path import join, abspath, islink, isdir, isfile
 import sys
 import getopt
 
-def transfer(src, dest, dir_only, file_only):
+def transfer(src, dest):
     """Will add all files in src to dest through 
     symlinks. If the item src exists as dest, it
     will drop into the directories and recursively
     call again.
     """
-    if islink(dest):
+    if islink(dest) and remove_syms:
         os.remove(dest)
         print(dest + " is symlink, deleting...")
        # return
@@ -24,11 +24,11 @@ def transfer(src, dest, dir_only, file_only):
             d_dest = abspath(join(dest, t))
             if isdir(d_dest):
                 print(d_dest + " already exists, going in...")
-                transfer(d_src, d_dest, dir_only, file_only)
+                transfer(d_src, d_dest)
             else:
                 print(d_dest + " does not exist, making directory")
                 os.mkdir(d_dest)
-                transfer(d_src, d_dest, dir_only, file_only)
+                transfer(d_src, d_dest)
                 #os.symlink(d_src, d_dest)
         if isfile(join(src, t)) and not dir_only:
             f_src  = abspath(join(src, t))
@@ -40,15 +40,16 @@ def transfer(src, dest, dir_only, file_only):
                 print(f_dest + " does not exist, making symlink")
                 os.symlink(f_src, f_dest)
 
-
 if __name__ == "__main__":
 
     dir_only = False
     file_only = False
+    remove_syms = False
     try:
         # Short option syntax: "hv:"
         # Long option syntax: "help" or "verbose="
-        opts, args = getopt.getopt(sys.argv[1:], "hs:d:", ["src=","dest=","dir","file"])
+        opts, args = getopt.getopt(sys.argv[1:], "hs:d:",
+                ["src=","dest=","dir","file","remove-symlinks"])
     
     except(getopt.GetoptError, err):
         # Print debug info
@@ -68,5 +69,7 @@ if __name__ == "__main__":
             dir_only = True
         elif opt in ["--file"]:
             file_only = True
+        elif opt in ["--remove-symlinks"]:
+            remove_syms = True
 
-    transfer(src, dest, dir_only, file_only)
+    transfer(src, dest)
