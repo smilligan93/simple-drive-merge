@@ -51,7 +51,7 @@ if __name__ == "__main__":
         opts, args = getopt.getopt(sys.argv[1:], "hs:d:",
                 ["src=","dest=","dir","file","remove-symlinks"])
     
-    except(getopt.GetoptError, err):
+    except getopt.GetoptError as err:
         # Print debug info
         print(str(err))
         sys.exit(2)
